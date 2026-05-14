@@ -4,10 +4,10 @@ import 'package:webview_flutter/webview_flutter.dart';
 class LinkScreen extends StatefulWidget {
   final String url;
 
-  LinkScreen({required this.url});
+  const LinkScreen({super.key, required this.url});
 
   @override
-  _LinkScreenState createState() => _LinkScreenState();
+  State<LinkScreen> createState() => _LinkScreenState();
 }
 
 class _LinkScreenState extends State<LinkScreen> {

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
-import '../state/user_provider.dart';
-import '../theme/app_theme.dart';
+import '../providers/user_provider.dart';
+
 import '../widgets/circular_gauge.dart';
 
 class DataScreen extends StatefulWidget {
   const DataScreen({super.key});
 
   @override
-  _DataScreenState createState() => _DataScreenState();
+  State<DataScreen> createState() => _DataScreenState();
 }
 
 class _DataScreenState extends State<DataScreen> {
@@ -141,7 +141,7 @@ class _DataScreenState extends State<DataScreen> {
             child: Text(
               'SCAN RESULTS',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha:0.7),
                 fontSize: 12,
                 letterSpacing: 2.0,
                 fontWeight: FontWeight.bold,
@@ -176,12 +176,12 @@ class _DataScreenState extends State<DataScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.arrow_upward, color: Colors.white.withOpacity(0.7), size: 14),
+                Icon(Icons.arrow_upward, color: Colors.white.withValues(alpha:0.7), size: 14),
                 const SizedBox(width: 4),
                 Text(
                   'Higher than 25% of users',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha:0.7),
                     fontSize: 12,
                   ),
                 ),
@@ -195,10 +195,10 @@ class _DataScreenState extends State<DataScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha:0.05),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha:0.1),
                 width: 1,
               ),
             ),
@@ -218,14 +218,14 @@ class _DataScreenState extends State<DataScreen> {
                         const SizedBox(height: 4),
                         Text(
                           'UPDATED TODAY',
-                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, letterSpacing: 1.0, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: Colors.white.withValues(alpha:0.5), fontSize: 10, letterSpacing: 1.0, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha:0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
@@ -268,7 +268,7 @@ class _DataScreenState extends State<DataScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha:0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -287,15 +287,15 @@ class _DataScreenState extends State<DataScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha:0.08),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha:0.2),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha:0.1),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -311,7 +311,7 @@ class _DataScreenState extends State<DataScreen> {
                     Text(
                       'WHAT THIS MEANS',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha:0.8),
                         fontSize: 10,
                         letterSpacing: 1.5,
                         fontWeight: FontWeight.bold,
@@ -323,7 +323,7 @@ class _DataScreenState extends State<DataScreen> {
                 Text(
                   'Your results show a stable baseline across several vitals. However, your resting heart rate of $restingHr bpm and HRV of $hrv ms indicates your recovery could be improved. This is having a larger impact on your overall score.',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha:0.9),
                     fontSize: 14,
                     height: 1.5,
                   ),

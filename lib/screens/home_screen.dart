@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/bottom_nav_bar.dart';
+
 import '../widgets/circular_gauge.dart';
 import '../widgets/glass_action_card.dart';
 import '../widgets/health_area_card.dart';
@@ -15,7 +15,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -29,18 +29,21 @@ class _HomeScreenState extends State<HomeScreen> {
       final res = await ApiService.getLinkToken(userProvider.userId!);
       final linkUrl = res['link_url'];
 
+      if (!mounted) return;
       final success = await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => LinkScreen(url: linkUrl)),
       );
 
       if (success == true) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Wearable connected! Syncing data...')),
         );
         _syncData();
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -243,9 +246,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  border: Border.all(color: Colors.white.withValues(alpha:0.1)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

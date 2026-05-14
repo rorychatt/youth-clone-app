@@ -8,7 +8,7 @@ class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
 
   @override
-  _MainWrapperState createState() => _MainWrapperState();
+  State<MainWrapper> createState() => _MainWrapperState();
 }
 
 class _MainWrapperState extends State<MainWrapper> {

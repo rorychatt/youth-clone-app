@@ -8,7 +8,7 @@ class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
 
   @override
-  _ServicesScreenState createState() => _ServicesScreenState();
+  State<ServicesScreen> createState() => _ServicesScreenState();
 }
 
 class _ServicesScreenState extends State<ServicesScreen> {
@@ -161,7 +161,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.lightGray.withOpacity(0.3),
+                  color: AppColors.lightGray.withValues(alpha:0.3),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: logoUrl != null
