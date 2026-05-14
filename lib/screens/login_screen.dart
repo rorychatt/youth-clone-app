@@ -3,20 +3,30 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isLogin = true;
 
-  void _login() async {
-    if (_emailController.text.isEmpty) return;
+  void _submit() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) return;
     
     setState(() => _isLoading = true);
     try {
-      await Provider.of<UserProvider>(context, listen: false).login(_emailController.text);
+      if (_isLogin) {
+        await Provider.of<UserProvider>(context, listen: false)
+            .login(_emailController.text, _passwordController.text);
+      } else {
+        await Provider.of<UserProvider>(context, listen: false)
+            .register(_emailController.text, _passwordController.text);
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
@@ -27,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('YOU(th) Login')),
+      appBar: AppBar(title: Text(_isLogin ? 'YOU(th) Login' : 'YOU(th) Register')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -38,14 +48,24 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
               keyboardType: TextInputType.emailAddress,
             ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+              obscureText: true,
+            ),
             SizedBox(height: 20),
             _isLoading 
-              ? CircularProgressIndicator()
+              ? const CircularProgressIndicator()
               : ElevatedButton(
-                  onPressed: _login,
-                  child: Text('Login / Register'),
-                  style: ElevatedButton.styleFrom(minimumSize: Size(double.infinity, 50)),
-                )
+                  style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+                  onPressed: _submit,
+                  child: Text(_isLogin ? 'Login' : 'Create Account'),
+                ),
+            TextButton(
+              onPressed: () => setState(() => _isLogin = !_isLogin),
+              child: Text(_isLogin ? 'Need an account? Register' : 'Have an account? Login'),
+            )
           ],
         ),
       ),

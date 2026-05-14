@@ -11,17 +11,31 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> login(String email) async {
+  static Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/users'),
+      Uri.parse('$baseUrl/users/login'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
+      body: jsonEncode({'email': email, 'password': password}),
     );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to login/register');
+      throw Exception('Failed to login. Check credentials.');
+    }
+  }
+
+  static Future<Map<String, dynamic>> register(String email, String password) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/users'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to register. Email may already be in use.');
     }
   }
 

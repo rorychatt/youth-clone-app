@@ -17,15 +17,27 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> login(String email) async {
-    final userData = await ApiService.login(email);
+  Future<void> login(String email, String password) async {
+    final userData = await ApiService.login(email, password);
     _userId = userData['id'];
     _email = userData['email'];
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_id', _userId!);
     await prefs.setString('email', _email!);
-    
+
+    notifyListeners();
+  }
+
+  Future<void> register(String email, String password) async {
+    final userData = await ApiService.register(email, password);
+    _userId = userData['id'];
+    _email = userData['email'];
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_id', _userId!);
+    await prefs.setString('email', _email!);
+
     notifyListeners();
   }
 

@@ -12,12 +12,14 @@ void main() async {
   runApp(
     ChangeNotifierProvider.value(
       value: userProvider,
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -29,9 +31,9 @@ class MyApp extends StatelessWidget {
       home: Consumer<UserProvider>(
         builder: (context, userProvider, _) {
           if (userProvider.isLoggedIn) {
-            return HomeScreen();
+            return const HomeScreen();
           } else {
-            return LoginScreen();
+            return const LoginScreen();
           }
         },
       ),
