@@ -11,7 +11,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+  ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/users/login'),
       headers: {'Content-Type': 'application/json'},
@@ -25,7 +28,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> register(String email, String password) async {
+  static Future<Map<String, dynamic>> register(
+    String email,
+    String password,
+  ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/users'),
       headers: {'Content-Type': 'application/json'},
@@ -95,7 +101,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> updateUserName(String userId, String name) async {
+  static Future<Map<String, dynamic>> updateUserName(
+    String userId,
+    String name,
+  ) async {
     final response = await http.patch(
       Uri.parse('$baseUrl/users/$userId'),
       headers: {'Content-Type': 'application/json'},
@@ -119,6 +128,24 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to fetch health metrics');
+    }
+  }
+
+  static Future<String> askClaude(String prompt) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/insights/claude/ask'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({'prompt': prompt}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['response'] ?? '';
+    } else {
+      throw Exception('Failed to ask Claude');
     }
   }
 }
