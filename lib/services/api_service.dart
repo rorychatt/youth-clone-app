@@ -94,4 +94,18 @@ class ApiService {
       throw Exception('Failed to disconnect provider');
     }
   }
+
+  static Future<Map<String, dynamic>> updateUserName(String userId, String name) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/users/$userId'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': name}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to update name');
+    }
+  }
 }
