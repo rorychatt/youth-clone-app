@@ -1,0 +1,48 @@
+appId: com.example.youth_clone_app
+---
+- launchApp
+- assertVisible: "Login / Register"
+
+# 1. Login to the App
+- tapOn: "Email"
+- inputText: "maestro_e2e@example.com"
+- hideKeyboard
+- tapOn: "Login / Register"
+
+# 2. Open the Junction Link UI
+- assertVisible: "Connect Oura / Wearable"
+- tapOn: "Connect Oura / Wearable"
+- assertVisible: "Connect Wearable"
+
+# 3. Webview Interaction (Junction Provider Selection)
+# Wait for the webview to load the Junction Link UI
+- extendedWaitUntil:
+    visible: "Oura" # Or "Oura Ring", matching the exact text in the Junction UI
+    timeout: 10000
+- tapOn: "Oura"
+
+# 4. Webview Interaction (Oura OAuth Login)
+# Note: The exact text "Email", "Password", and "Sign In" might vary slightly 
+# based on Oura's localized login page. Adjust these selectors if they fail.
+- extendedWaitUntil:
+    visible: "Email"
+    timeout: 10000
+- tapOn: "Email"
+- inputText: ${OURA_EMAIL}
+- hideKeyboard
+- tapOn: "Password"
+- inputText: ${OURA_PASSWORD}
+- hideKeyboard
+- tapOn: "Sign In" # Or "Log In"
+
+# 5. OAuth Consent
+- extendedWaitUntil:
+    visible: "Allow" # Or "Accept"
+    timeout: 10000
+- tapOn: "Allow"
+
+# 6. Return to Native App & Sync
+# Once the webview closes automatically, we should be back on the Dashboard
+- assertVisible: "Sync Data"
+- tapOn: "Sync Data"
+- assertVisible: "Sync successful"

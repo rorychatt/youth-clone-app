@@ -28,3 +28,24 @@ The official Flutter client for the YOU(th) health tracking application. This mo
 - **Authentication**: Seamless login interacting with the backend user database.
 - **Wearable Connectivity**: An in-app WebView launches the Junction Sandbox connection flow to authorize access to wearables.
 - **Data Sync**: Direct synchronization of sleep/activity summaries from the Junction network down to the local Postgres database.
+
+## End-to-End Testing (Maestro)
+This project uses [Maestro](https://maestro.mobile.dev/) for true black-box E2E testing, including interaction with the Junction OAuth WebViews.
+
+### Setup
+1. Install Maestro:
+   ```bash
+   curl -Ls "https://get.maestro.mobile.dev" | bash
+   ```
+2. Create your local secrets file:
+   ```bash
+   cp .env.maestro.example .env.maestro
+   ```
+   *Edit `.env.maestro` and insert your actual Oura test credentials.*
+
+### Running the E2E Flow
+Ensure your app is currently installed and running visibly on your iOS Simulator or Android Emulator. Then run:
+```bash
+maestro test --env .env.maestro .maestro/e2e_flow.yaml
+```
+This will physically take over the simulator, type your credentials into the WebView, complete the OAuth flow, and verify the backend data sync!
