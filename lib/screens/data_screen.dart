@@ -108,126 +108,133 @@ class _DataScreenState extends State<DataScreen> {
                 color: Color(0xFF2C1E16),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Ask Claude',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (chatResponse.isNotEmpty)
-                      Container(
-                        constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(ctx).size.height * 0.5,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Ask Claude',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                        margin: const EdgeInsets.only(bottom: 16.0),
-                        child: SingleChildScrollView(
-                          child: Text(
-                            chatResponse,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 14,
-                              height: 1.5,
+                      ),
+                      const SizedBox(height: 16),
+                      if (chatResponse.isNotEmpty)
+                        Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(ctx).size.height * 0.5,
+                          ),
+                          margin: const EdgeInsets.only(bottom: 16.0),
+                          child: SingleChildScrollView(
+                            child: Text(
+                              chatResponse,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 14,
+                                height: 1.5,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    TextField(
-                      controller: textController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Why is my HRV so low?',
-                        hintStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
+                      TextField(
+                        controller: textController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'e.g. Why is my HRV so low?',
+                          hintStyle: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.1),
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
                           ),
                         ),
-                        onPressed: isAsking
-                            ? null
-                            : () async {
-                                if (textController.text.trim().isEmpty) return;
-
-                                setSheetState(() {
-                                  isAsking = true;
-                                  chatResponse = '';
-                                });
-
-                                final score =
-                                    (_sleepData?['score'] as num?)
-                                        ?.toDouble() ??
-                                    0.0;
-                                final restingHr =
-                                    (_sleepData?['hr_resting'] as num?)
-                                        ?.toInt() ??
-                                    (_sleepData?['hr_lowest'] as num?)
-                                        ?.toInt() ??
-                                    0;
-                                final hrv =
-                                    (_sleepData?['average_hrv'] as num?)
-                                        ?.toInt() ??
-                                    0;
-
-                                final prompt =
-                                    "Context: The user's sleep score is ${score.toInt()}/100, resting HR is $restingHr bpm, and HRV is $hrv ms. Question: ${textController.text}";
-
-                                try {
-                                  final res = await ApiService.askClaude(
-                                    prompt,
-                                  );
-                                  setSheetState(() {
-                                    chatResponse = res;
-                                    isAsking = false;
-                                  });
-                                } catch (e) {
-                                  setSheetState(() {
-                                    chatResponse =
-                                        "Sorry, couldn't reach Claude.";
-                                    isAsking = false;
-                                  });
-                                }
-                              },
-                        child: isAsking
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'Ask',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: isAsking
+                              ? null
+                              : () async {
+                                  if (textController.text.trim().isEmpty)
+                                    return;
+
+                                  setSheetState(() {
+                                    isAsking = true;
+                                    chatResponse = '';
+                                  });
+
+                                  final score =
+                                      (_sleepData?['score'] as num?)
+                                          ?.toDouble() ??
+                                      0.0;
+                                  final restingHr =
+                                      (_sleepData?['hr_resting'] as num?)
+                                          ?.toInt() ??
+                                      (_sleepData?['hr_lowest'] as num?)
+                                          ?.toInt() ??
+                                      0;
+                                  final hrv =
+                                      (_sleepData?['average_hrv'] as num?)
+                                          ?.toInt() ??
+                                      0;
+
+                                  final prompt =
+                                      "Context: The user's sleep score is ${score.toInt()}/100, resting HR is $restingHr bpm, and HRV is $hrv ms. Question: ${textController.text}";
+
+                                  try {
+                                    final res = await ApiService.askClaude(
+                                      prompt,
+                                    );
+                                    if (ctx.mounted) {
+                                      setSheetState(() {
+                                        chatResponse = res;
+                                        isAsking = false;
+                                      });
+                                    }
+                                  } catch (e) {
+                                    if (ctx.mounted) {
+                                      setSheetState(() {
+                                        chatResponse =
+                                            "Sorry, couldn't reach Claude.";
+                                        isAsking = false;
+                                      });
+                                    }
+                                  }
+                                },
+                          child: isAsking
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Ask',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -426,7 +433,9 @@ class _DataScreenState extends State<DataScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const FullDataScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const FullDataScreen(),
+                          ),
                         );
                       },
                       child: Container(
