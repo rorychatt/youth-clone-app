@@ -217,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Action Cards Scroller
               SizedBox(
-                height: 160,
+                height: 180,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 24),
