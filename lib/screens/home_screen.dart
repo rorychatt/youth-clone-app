@@ -198,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          name.isNotEmpty ? name[0] : 'S',
+                          displayName.isNotEmpty ? displayName[0] : 'S',
                           style: AppTheme.headingSmall.copyWith(
                             color: AppColors.dark,
                           ),
