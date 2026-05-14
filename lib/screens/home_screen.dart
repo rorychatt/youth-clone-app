@@ -223,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   children: [
                     GlassActionCard(
-                      icon: CupertinoIcons.activity,
+                      icon: Icons.watch,
                       title: 'Connect your devices',
                       subtitle: 'Unlock more insights by connecting your wearable devices',
                       buttonText: _isLoading ? 'CONNECTING...' : 'CONNECT A DEVICE',
@@ -231,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(width: 16),
                     GlassActionCard(
-                      icon: CupertinoIcons.arrow_2_circlepath,
+                      icon: Icons.sync,
                       title: 'Fetch Latest Data',
                       subtitle: 'OUT OF SYNC',
                       subtitleColor: const Color(0xFFF97316),
