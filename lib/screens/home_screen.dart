@@ -27,17 +27,22 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final res = await ApiService.getLinkToken(userProvider.userId!);
       final linkUrl = res['link_url'];
-      
+
       final success = await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => LinkScreen(url: linkUrl)),
       );
-      
+
       if (success == true) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wearable connected!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Wearable connected! Syncing data...')),
+        );
+        _syncData();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -49,9 +54,9 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final res = await ApiService.syncJunction(userProvider.userId!);
       if (!mounted) return;
-      
+
       final data = res['data_fetched'] ?? {};
-      
+
       showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -60,7 +65,9 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -75,7 +82,9 @@ class _HomeScreenState extends State<HomeScreen> {
           // Main Scrollable Content
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 100), // Space for bottom nav
+              padding: const EdgeInsets.only(
+                bottom: 100,
+              ), // Space for bottom nav
               child: Column(
                 children: [
                   _buildTopDarkSection(context),
@@ -84,14 +93,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          
+
           // Bottom Navigation Bar
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: BottomNavBar(),
-          ),
+          const Positioned(left: 0, right: 0, bottom: 0, child: BottomNavBar()),
         ],
       ),
     );
@@ -101,9 +105,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final userProvider = Provider.of<UserProvider>(context);
     final emailPrefix = userProvider.email?.split('@')[0] ?? 'User';
     // Capitalize first letter
-    final name = emailPrefix.isNotEmpty 
-      ? '${emailPrefix[0].toUpperCase()}${emailPrefix.substring(1)}'
-      : 'User';
+    final name = emailPrefix.isNotEmpty
+        ? '${emailPrefix[0].toUpperCase()}${emailPrefix.substring(1)}'
+        : 'User';
 
     return Container(
       width: double.infinity,
@@ -114,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.black12,
             blurRadius: 20,
             offset: Offset(0, 10),
-          )
+          ),
         ],
         gradient: RadialGradient(
           center: Alignment(0.0, -0.2),
@@ -158,10 +162,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               name,
-                              style: AppTheme.headingMedium.copyWith(color: AppColors.white),
+                              style: AppTheme.headingMedium.copyWith(
+                                color: AppColors.white,
+                              ),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(Icons.edit, color: Colors.white60, size: 16),
+                            const Icon(
+                              Icons.edit,
+                              color: Colors.white60,
+                              size: 16,
+                            ),
                           ],
                         ),
                       ],
@@ -178,7 +188,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           name.isNotEmpty ? name[0] : 'S',
-                          style: AppTheme.headingSmall.copyWith(color: AppColors.dark),
+                          style: AppTheme.headingSmall.copyWith(
+                            color: AppColors.dark,
+                          ),
                         ),
                       ),
                     ),
@@ -187,9 +199,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               const SizedBox(height: 32),
-              
+
               // Health Score Title
-              Text('Health Score', style: AppTheme.headingMedium.copyWith(color: AppColors.white, fontWeight: FontWeight.w500)),
+              Text(
+                'Health Score',
+                style: AppTheme.headingMedium.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
                 'UPDATED TODAY',
@@ -206,10 +224,13 @@ class _HomeScreenState extends State<HomeScreen> {
               const CircularGauge(score: 92, label: 'Optimal'),
 
               const SizedBox(height: 16),
-              
+
               // Pill
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -218,8 +239,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('4/10 ', style: AppTheme.bodyMedium.copyWith(color: AppColors.white, fontWeight: FontWeight.bold)),
-                    Text('Biomarkers to improve', style: AppTheme.bodyMedium.copyWith(color: Colors.white70, fontWeight: FontWeight.w300)),
+                    Text(
+                      '4/10 ',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Biomarkers to improve',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -236,8 +269,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     GlassActionCard(
                       icon: Icons.watch,
                       title: 'Connect your devices',
-                      subtitle: 'Unlock more insights by connecting your wearable devices',
-                      buttonText: _isLoading ? 'CONNECTING...' : 'CONNECT A DEVICE',
+                      subtitle:
+                          'Unlock more insights by connecting your wearable devices',
+                      buttonText: _isLoading
+                          ? 'CONNECTING...'
+                          : 'CONNECT A DEVICE',
                       onTap: _connectWearable,
                     ),
                     const SizedBox(width: 16),
@@ -246,7 +282,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Fetch Latest Data',
                       subtitle: 'OUT OF SYNC',
                       subtitleColor: const Color(0xFFF97316),
-                      buttonText: _isLoading ? 'SYNCING...' : 'SYNC HEALTH DATA',
+                      buttonText: _isLoading
+                          ? 'SYNCING...'
+                          : 'SYNC HEALTH DATA',
                       onTap: _syncData,
                       isWarning: true,
                     ),
@@ -266,20 +304,46 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Health areas to improve', style: AppTheme.headingMedium.copyWith(color: AppColors.dark)),
+          Text(
+            'Health areas to improve',
+            style: AppTheme.headingMedium.copyWith(color: AppColors.dark),
+          ),
           const SizedBox(height: 16),
-          const HealthAreaCard(icon: CupertinoIcons.heart_fill, iconColor: Colors.red, title: 'Cardiovascular', count: '2/4'),
+          const HealthAreaCard(
+            icon: CupertinoIcons.heart_fill,
+            iconColor: Colors.red,
+            title: 'Cardiovascular',
+            count: '2/4',
+          ),
           const SizedBox(height: 12),
-          const HealthAreaCard(icon: CupertinoIcons.wind, iconColor: Colors.orange, title: 'Respiratory', count: '2/4'),
+          const HealthAreaCard(
+            icon: CupertinoIcons.wind,
+            iconColor: Colors.orange,
+            title: 'Respiratory',
+            count: '2/4',
+          ),
           const SizedBox(height: 12),
-          HealthAreaCard(icon: CupertinoIcons.bolt_fill, iconColor: Colors.amber[700]!, title: 'Metabolic', count: '2/4'),
+          HealthAreaCard(
+            icon: CupertinoIcons.bolt_fill,
+            iconColor: Colors.amber[700]!,
+            title: 'Metabolic',
+            count: '2/4',
+          ),
           const SizedBox(height: 12),
-          HealthAreaCard(icon: CupertinoIcons.drop_fill, iconColor: Colors.red[700]!, title: 'Blood', count: '2/4'),
+          HealthAreaCard(
+            icon: CupertinoIcons.drop_fill,
+            iconColor: Colors.red[700]!,
+            title: 'Blood',
+            count: '2/4',
+          ),
 
           const SizedBox(height: 32),
-          Text('Health areas to unlock', style: AppTheme.headingMedium.copyWith(color: AppColors.dark)),
+          Text(
+            'Health areas to unlock',
+            style: AppTheme.headingMedium.copyWith(color: AppColors.dark),
+          ),
           const SizedBox(height: 16),
-          
+
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -296,15 +360,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.orange.shade100,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(CupertinoIcons.person_solid, color: Color(0xFFF97316)),
+                  child: const Icon(
+                    CupertinoIcons.person_solid,
+                    color: Color(0xFFF97316),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Face skin', style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                      Text('Run checkup to see results', style: AppTheme.bodySmall),
+                      Text(
+                        'Face skin',
+                        style: AppTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Run checkup to see results',
+                        style: AppTheme.bodySmall,
+                      ),
                     ],
                   ),
                 ),
@@ -314,26 +389,42 @@ class _HomeScreenState extends State<HomeScreen> {
                     backgroundColor: AppColors.dark,
                     foregroundColor: AppColors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                  child: const Text('UNLOCK', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'UNLOCK',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
           ),
 
           const SizedBox(height: 32),
-          Text('DISCLAIMER', style: AppTheme.caption.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            'DISCLAIMER',
+            style: AppTheme.caption.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Text(
             'It\'s important to note that while these biomarkers provide a comprehensive overview, they don\'t capture everything. A regular check-ups with health professionals is recommended. Learn more.',
             style: AppTheme.bodySmall.copyWith(height: 1.5),
           ),
-          
+
           const SizedBox(height: 40),
           Center(
-            child: Text('YOU(th)', style: AppTheme.headingMedium.copyWith(color: AppColors.dark, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -1)),
+            child: Text(
+              'YOU(th)',
+              style: AppTheme.headingMedium.copyWith(
+                color: AppColors.dark,
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1,
+              ),
+            ),
           ),
         ],
       ),
