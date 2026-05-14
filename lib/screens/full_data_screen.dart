@@ -25,7 +25,11 @@ class _FullDataScreenState extends State<FullDataScreen> {
   Future<void> _fetchHistory() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (userProvider.userId == null) {
-      if (mounted) setState(() { _error = 'Not logged in'; _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _error = 'Not logged in';
+          _isLoading = false;
+        });
       return;
     }
 
@@ -33,7 +37,8 @@ class _FullDataScreenState extends State<FullDataScreen> {
       final history = await ApiService.getHealthHistory(userProvider.userId!);
       if (mounted) {
         setState(() {
-          _history = history.reversed.toList(); // Assuming API returns desc, we reverse for asc (oldest to newest)
+          _history = history.reversed
+              .toList(); // Assuming API returns desc, we reverse for asc (oldest to newest)
           // Wait, the backend query uses ORDER BY recorded_at ASC, so oldest to newest. No need to reverse.
           _history = history;
           _isLoading = false;
@@ -47,6 +52,171 @@ class _FullDataScreenState extends State<FullDataScreen> {
         });
       }
     }
+  }
+
+  void _showAskMoreSheet(BuildContext context) {
+    final textController = TextEditingController();
+    bool isAsking = false;
+    String chatResponse = '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              decoration: const BoxDecoration(
+                color: Color(0xFF2C1E16),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Ask Claude',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (chatResponse.isNotEmpty)
+                        Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(ctx).size.height * 0.5,
+                          ),
+                          margin: const EdgeInsets.only(bottom: 16.0),
+                          child: SingleChildScrollView(
+                            child: Text(
+                              chatResponse,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 14,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      TextField(
+                        controller: textController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'e.g. Why is my HRV so low?',
+                          hintStyle: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: isAsking
+                              ? null
+                              : () async {
+                                  if (textController.text.trim().isEmpty)
+                                    return;
+                                  setSheetState(() {
+                                    isAsking = true;
+                                    chatResponse = '';
+                                  });
+
+                                  Map<String, dynamic>? latestSleep;
+                                  if (_history.isNotEmpty) {
+                                    final sleepList =
+                                        _history.last['sleep'] as List?;
+                                    if (sleepList != null &&
+                                        sleepList.isNotEmpty) {
+                                      latestSleep = sleepList.first;
+                                    }
+                                  }
+
+                                  final score =
+                                      (latestSleep?['score'] as num?)
+                                          ?.toDouble() ??
+                                      0.0;
+                                  final restingHr =
+                                      (latestSleep?['hr_resting'] as num?)
+                                          ?.toInt() ??
+                                      (latestSleep?['hr_lowest'] as num?)
+                                          ?.toInt() ??
+                                      0;
+                                  final hrv =
+                                      (latestSleep?['average_hrv'] as num?)
+                                          ?.toInt() ??
+                                      0;
+
+                                  final prompt =
+                                      "Context: The user's latest sleep score is ${score.toInt()}/100, resting HR is $restingHr bpm, and HRV is $hrv ms. Question: ${textController.text}";
+
+                                  try {
+                                    final res = await ApiService.askClaude(
+                                      prompt,
+                                    );
+                                    if (ctx.mounted) {
+                                      setSheetState(() {
+                                        chatResponse = res;
+                                        isAsking = false;
+                                      });
+                                    }
+                                  } catch (e) {
+                                    if (ctx.mounted) {
+                                      setSheetState(() {
+                                        chatResponse =
+                                            "Sorry, couldn't reach Claude.";
+                                        isAsking = false;
+                                      });
+                                    }
+                                  }
+                                },
+                          child: isAsking
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Ask',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -71,11 +241,17 @@ class _FullDataScreenState extends State<FullDataScreen> {
             children: [
               // Custom App Bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      icon: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const Text(
@@ -87,17 +263,37 @@ class _FullDataScreenState extends State<FullDataScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.auto_awesome,
+                        color: Colors.orangeAccent,
+                      ),
+                      onPressed: () => _showAskMoreSheet(context),
+                    ),
                   ],
                 ),
               ),
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
                     : _error.isNotEmpty
-                        ? Center(child: Text(_error, style: const TextStyle(color: Colors.white)))
-                        : _history.isEmpty
-                            ? const Center(child: Text('No historical data found', style: TextStyle(color: Colors.white)))
-                            : _buildCharts(),
+                    ? Center(
+                        child: Text(
+                          _error,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      )
+                    : _history.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No historical data found',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      )
+                    : _buildCharts(),
               ),
             ],
           ),
@@ -112,7 +308,11 @@ class _FullDataScreenState extends State<FullDataScreen> {
       children: [
         _buildChartCard(
           title: 'Wellness Score',
-          spots: _getSpots((data) => (data['score'] as num?)?.toDouble() ?? 0.0),
+          spots: _getSpots((data) {
+            final sleepList = data['sleep'] as List?;
+            if (sleepList == null || sleepList.isEmpty) return 0.0;
+            return (sleepList.first['score'] as num?)?.toDouble() ?? 0.0;
+          }),
           minY: 0,
           maxY: 100,
           idealMin: 80,
@@ -122,7 +322,13 @@ class _FullDataScreenState extends State<FullDataScreen> {
         const SizedBox(height: 24),
         _buildChartCard(
           title: 'Resting Heart Rate (bpm)',
-          spots: _getSpots((data) => (data['hr_resting'] as num?)?.toDouble() ?? (data['hr_lowest'] as num?)?.toDouble() ?? 0.0),
+          spots: _getSpots((data) {
+            final sleepList = data['sleep'] as List?;
+            if (sleepList == null || sleepList.isEmpty) return 0.0;
+            return (sleepList.first['hr_resting'] as num?)?.toDouble() ??
+                (sleepList.first['hr_lowest'] as num?)?.toDouble() ??
+                0.0;
+          }),
           minY: 30,
           maxY: 100,
           idealMin: 40,
@@ -132,7 +338,11 @@ class _FullDataScreenState extends State<FullDataScreen> {
         const SizedBox(height: 24),
         _buildChartCard(
           title: 'HRV (ms)',
-          spots: _getSpots((data) => (data['average_hrv'] as num?)?.toDouble() ?? 0.0),
+          spots: _getSpots((data) {
+            final sleepList = data['sleep'] as List?;
+            if (sleepList == null || sleepList.isEmpty) return 0.0;
+            return (sleepList.first['average_hrv'] as num?)?.toDouble() ?? 0.0;
+          }),
           minY: 10,
           maxY: 150,
           idealMin: 40,
@@ -182,7 +392,11 @@ class _FullDataScreenState extends State<FullDataScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -192,7 +406,11 @@ class _FullDataScreenState extends State<FullDataScreen> {
                 ),
                 child: Text(
                   'Range: ${idealMin.toInt()}-${idealMax.toInt()}',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 10, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -203,7 +421,10 @@ class _FullDataScreenState extends State<FullDataScreen> {
             child: LineChart(
               LineChartData(
                 minX: 0,
-                maxX: (_history.length - 1).toDouble().clamp(1.0, double.infinity),
+                maxX: (_history.length - 1).toDouble().clamp(
+                  1.0,
+                  double.infinity,
+                ),
                 minY: minY,
                 maxY: maxY,
                 gridData: FlGridData(
@@ -218,9 +439,15 @@ class _FullDataScreenState extends State<FullDataScreen> {
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -228,7 +455,10 @@ class _FullDataScreenState extends State<FullDataScreen> {
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 10,
+                          ),
                         );
                       },
                     ),
