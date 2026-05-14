@@ -105,11 +105,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTopDarkSection(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-    final emailPrefix = userProvider.email?.split('@')[0] ?? 'User';
-    // Capitalize first letter
-    final name = emailPrefix.isNotEmpty
-        ? '${emailPrefix[0].toUpperCase()}${emailPrefix.substring(1)}'
-        : 'User';
+
+    // Use stored name if available, otherwise fall back to email prefix
+    String displayName;
+    if (userProvider.name != null && userProvider.name!.isNotEmpty) {
+      displayName = userProvider.name!;
+    } else {
+      final emailPrefix = userProvider.email?.split('@')[0] ?? 'User';
+      displayName = emailPrefix.isNotEmpty
+          ? '${emailPrefix[0].toUpperCase()}${emailPrefix.substring(1)}'
+          : 'User';
+    }
 
     return Container(
       width: double.infinity,
@@ -163,16 +169,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         Row(
                           children: [
                             Text(
-                              name,
+                              displayName,
                               style: AppTheme.headingMedium.copyWith(
                                 color: AppColors.white,
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(
-                              Icons.edit,
-                              color: Colors.white60,
-                              size: 16,
+                            GestureDetector(
+                              onTap: () => _showEditNameDialog(context),
+                              child: const Icon(
+                                Icons.edit,
+                                color: Colors.white60,
+                                size: 16,
+                              ),
                             ),
                           ],
                         ),
@@ -189,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          name.isNotEmpty ? name[0] : 'S',
+                          displayName.isNotEmpty ? displayName[0] : 'S',
                           style: AppTheme.headingSmall.copyWith(
                             color: AppColors.dark,
                           ),
@@ -431,6 +440,99 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showEditNameDialog(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final controller = TextEditingController(
+      text: userProvider.name ??
+          (userProvider.email?.split('@')[0] ?? '').substring(0, 1).toUpperCase() +
+              (userProvider.email?.split('@')[0] ?? '').substring(1),
+    );
+    bool isLoading = false;
+
+    showCupertinoDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          return CupertinoAlertDialog(
+            title: const Text('Edit Name'),
+            content: Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: CupertinoTextField(
+                controller: controller,
+                placeholder: 'Enter your name',
+                autofocus: true,
+                maxLength: 100,
+              ),
+            ),
+            actions: [
+              CupertinoDialogAction(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.of(dialogContext).pop(),
+              ),
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: isLoading
+                    ? null
+                    : () async {
+                        final newName = controller.text.trim();
+                        if (newName.isEmpty || newName.length > 100) {
+                          showCupertinoDialog(
+                            context: dialogContext,
+                            builder: (ctx) => CupertinoAlertDialog(
+                              title: const Text('Invalid Name'),
+                              content: const Text('Name must be between 1 and 100 characters.'),
+                              actions: [
+                                CupertinoDialogAction(
+                                  child: const Text('OK'),
+                                  onPressed: () => Navigator.of(ctx).pop(),
+                                ),
+                              ],
+                            ),
+                          );
+                          return;
+                        }
+
+                        setState(() {
+                          isLoading = true;
+                        });
+
+                        try {
+                          await userProvider.updateName(newName);
+                          if (dialogContext.mounted) {
+                            Navigator.of(dialogContext).pop();
+                          }
+                        } catch (e) {
+                          setState(() {
+                            isLoading = false;
+                          });
+                          if (dialogContext.mounted) {
+                            showCupertinoDialog(
+                              context: dialogContext,
+                              builder: (ctx) => CupertinoAlertDialog(
+                                title: const Text('Error'),
+                                content: Text('Failed to update name: $e'),
+                                actions: [
+                                  CupertinoDialogAction(
+                                    child: const Text('OK'),
+                                    onPressed: () => Navigator.of(ctx).pop(),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        }
+                      },
+                child: isLoading
+                    ? const CupertinoActivityIndicator()
+                    : const Text('Save'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
