@@ -46,3 +46,19 @@ appId: com.example.youth_clone_app
 - assertVisible: "Sync Data"
 - tapOn: "Sync Data"
 - assertVisible: "Sync successful"
+
+# 7. Check Services Tab
+- tapOn: "Services"
+- assertVisible: "Linked Devices"
+- extendedWaitUntil:
+    visible: "Oura"
+    timeout: 5000
+- assertVisible: "CONNECTED"
+
+# 8. Manage/Disconnect Device
+- tapOn: "Disconnect"
+- assertVisible: "Are you sure you want to disconnect this device?"
+- tapOn: "Disconnect"
+- extendedWaitUntil:
+    visible: "No devices linked yet."
+    timeout: 5000
