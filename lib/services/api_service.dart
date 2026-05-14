@@ -83,4 +83,15 @@ class ApiService {
       throw Exception('Failed to get connected providers');
     }
   }
+
+  static Future<void> disconnectProvider(String userId, String provider) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/junction/providers/$userId/$provider'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to disconnect provider');
+    }
+  }
 }

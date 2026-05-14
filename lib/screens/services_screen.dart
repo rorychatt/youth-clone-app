@@ -50,6 +50,46 @@ class _ServicesScreenState extends State<ServicesScreen> {
     }
   }
 
+  Future<void> _disconnectProvider(String slug) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    
+    // Show confirmation dialog
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Disconnect Device'),
+        content: const Text('Are you sure you want to disconnect this device? You will no longer receive data from it.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.darkGray)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Disconnect', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+    
+    try {
+      await ApiService.disconnectProvider(userProvider.userId!, slug);
+      await _fetchProviders();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Device disconnected successfully.')));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,13 +204,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 ),
               ),
               OutlinedButton(
-                onPressed: () {},
+                onPressed: () => _disconnectProvider(provider['slug']),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.dark,
-                  side: const BorderSide(color: AppColors.lightGray),
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text('Manage', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                child: const Text('Disconnect', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
