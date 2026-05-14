@@ -8,6 +8,7 @@ import '../widgets/bottom_nav_bar.dart';
 import '../widgets/circular_gauge.dart';
 import '../widgets/glass_action_card.dart';
 import '../widgets/health_area_card.dart';
+import '../widgets/sync_data_sheet.dart';
 import 'link_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -46,9 +47,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     setState(() => _isLoading = true);
     try {
-      await ApiService.syncJunction(userProvider.userId!);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sync successful!')));
+      final res = await ApiService.syncJunction(userProvider.userId!);
+      if (!mounted) return;
+      
+      final data = res['data_fetched'] ?? {};
+      
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => SyncDataSheet(data: data),
+      );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _isLoading = false);
