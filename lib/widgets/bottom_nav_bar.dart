@@ -4,7 +4,14 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 class BottomNavBar extends StatelessWidget {
-  const BottomNavBar({super.key});
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const BottomNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +52,11 @@ class BottomNavBar extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildNavItem(CupertinoIcons.house_fill, 'Home', true),
-                  _buildNavItem(CupertinoIcons.chart_bar_alt_fill, 'Data', false),
+                  _buildNavItem(CupertinoIcons.house_fill, 'Home', 0),
+                  _buildNavItem(CupertinoIcons.chart_bar_alt_fill, 'Data', 1),
                   const SizedBox(width: 48), // Space for FAB
-                  _buildNavItem(CupertinoIcons.square_grid_2x2_fill, 'Services', false),
-                  _buildNavItem(CupertinoIcons.checkmark_rectangle_fill, 'Plan', false),
+                  _buildNavItem(CupertinoIcons.square_grid_2x2_fill, 'Services', 2),
+                  _buildNavItem(CupertinoIcons.checkmark_rectangle_fill, 'Plan', 3),
                 ],
               ),
             ),
@@ -84,21 +91,26 @@ class BottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool active) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: active ? AppColors.dark : AppColors.darkGray, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: active ? FontWeight.bold : FontWeight.w500,
-            color: active ? AppColors.dark : AppColors.darkGray,
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final active = currentIndex == index;
+    return GestureDetector(
+      onTap: () => onTap(index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: active ? AppColors.dark : AppColors.darkGray, size: 24),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: active ? FontWeight.bold : FontWeight.w500,
+              color: active ? AppColors.dark : AppColors.darkGray,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

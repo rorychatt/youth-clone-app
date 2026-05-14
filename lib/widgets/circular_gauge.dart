@@ -22,7 +22,7 @@ class CircularGauge extends StatelessWidget {
             painter: GaugePainter(score: score),
           ),
           Positioned(
-            top: 24, // Push the number down slightly
+            top: 44, // Push the number down slightly
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -44,12 +44,26 @@ class CircularGauge extends StatelessWidget {
           const Positioned(
             bottom: 0,
             left: 8,
-            child: Text('0', style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold)),
+            child: Text(
+              '0',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           const Positioned(
             bottom: 0,
             right: 8,
-            child: Text('100', style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold)),
+            child: Text(
+              '100',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -66,7 +80,7 @@ class GaugePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height);
     final radius = size.width / 2 - 8;
-    
+
     // Background arc
     final bgPaint = Paint()
       ..color = Colors.white.withOpacity(0.1)

@@ -66,4 +66,21 @@ class ApiService {
       throw Exception('Failed to sync junction data');
     }
   }
+
+  static Future<List<dynamic>> getProviders(String userId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/junction/providers/$userId'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      if (body['providers'] != null) {
+        return body['providers'] as List<dynamic>;
+      }
+      return [];
+    } else {
+      throw Exception('Failed to get connected providers');
+    }
+  }
 }

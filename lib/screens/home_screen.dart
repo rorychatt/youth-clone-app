@@ -20,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
+  bool _hasSynced = false;
 
   void _connectWearable() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -54,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final res = await ApiService.syncJunction(userProvider.userId!);
       if (!mounted) return;
+      setState(() => _hasSynced = true);
 
       final data = res['data_fetched'] ?? {};
 
@@ -95,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // Bottom Navigation Bar
-          const Positioned(left: 0, right: 0, bottom: 0, child: BottomNavBar()),
+          // Bottom navbar removed to MainWrapper
         ],
       ),
     );
@@ -278,15 +280,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(width: 16),
                     GlassActionCard(
-                      icon: Icons.sync,
+                      icon: _hasSynced ? Icons.check_circle : Icons.sync,
                       title: 'Fetch Latest Data',
-                      subtitle: 'OUT OF SYNC',
-                      subtitleColor: const Color(0xFFF97316),
+                      subtitle: _hasSynced ? 'UP TO DATE' : 'OUT OF SYNC',
+                      subtitleColor: _hasSynced
+                          ? Colors.green
+                          : const Color(0xFFF97316),
                       buttonText: _isLoading
                           ? 'SYNCING...'
-                          : 'SYNC HEALTH DATA',
+                          : (_hasSynced ? 'SYNC AGAIN' : 'SYNC HEALTH DATA'),
                       onTap: _syncData,
-                      isWarning: true,
+                      isWarning: !_hasSynced,
                     ),
                   ],
                 ),

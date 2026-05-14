@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_wrapper.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       home: Consumer<UserProvider>(
         builder: (context, userProvider, _) {
           if (userProvider.isLoggedIn) {
-            return const HomeScreen();
+            return const MainWrapper();
           } else {
             return const LoginScreen();
           }
