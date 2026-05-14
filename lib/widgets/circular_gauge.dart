@@ -12,39 +12,43 @@ class CircularGauge extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 240,
-      height: 130,
+      height: 140, // Increased height to push text down
       child: Stack(
-        alignment: Alignment.bottomCenter,
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
         children: [
           CustomPaint(
             size: const Size(240, 120),
             painter: GaugePainter(score: score),
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${score.toInt()}',
-                style: AppTheme.logo.copyWith(
-                  color: AppColors.white,
-                  fontSize: 64,
-                  height: 1.0,
+          Positioned(
+            top: 24, // Push the number down slightly
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${score.toInt()}',
+                  style: AppTheme.logo.copyWith(
+                    color: AppColors.white,
+                    fontSize: 64,
+                    height: 1.0,
+                  ),
                 ),
-              ),
-              Text(
-                label,
-                style: AppTheme.bodyMedium.copyWith(color: Colors.white70),
-              ),
-            ],
+                Text(
+                  label,
+                  style: AppTheme.bodyMedium.copyWith(color: Colors.white70),
+                ),
+              ],
+            ),
           ),
           const Positioned(
             bottom: 0,
-            left: 0,
+            left: 8,
             child: Text('0', style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold)),
           ),
           const Positioned(
             bottom: 0,
-            right: 0,
+            right: 8,
             child: Text('100', style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold)),
           ),
         ],
