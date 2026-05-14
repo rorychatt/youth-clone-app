@@ -15,98 +15,89 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: SizedBox(
-        height: 60,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
-          children: [
-            // Background with blur and top border
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
-                  border: const Border(top: BorderSide(color: AppColors.lightGray)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 20,
-                      offset: Offset(0, -5),
-                    )
-                  ],
-                ),
-                child: ClipRRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                    child: Container(color: Colors.transparent),
-                  ),
-                ),
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    return SizedBox(
+      height: 60 + bottomPadding,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          // Solid background spanning to the bottom
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
               ),
             ),
-            
-            // Icons Row
-            Container(
+          ),
+
+          // Icons Row constrained to the top 60px
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 60,
+            child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildNavItem(CupertinoIcons.house_fill, 'Home', 0),
-                  _buildNavItem(CupertinoIcons.chart_bar_alt_fill, 'Data', 1),
+                  _buildNavItem(Icons.home, 'Home', 0),
+                  _buildNavItem(Icons.bar_chart, 'Data', 1),
                   const SizedBox(width: 48), // Space for FAB
-                  _buildNavItem(CupertinoIcons.square_grid_2x2_fill, 'Services', 2),
-                  _buildNavItem(CupertinoIcons.checkmark_rectangle_fill, 'Plan', 3),
+                  _buildNavItem(Icons.grid_view, 'Services', 2),
+                  _buildNavItem(Icons.check_box, 'Plan', 3),
                 ],
               ),
             ),
+          ),
 
-            // Floating Action Button
-            Positioned(
-              top: -24,
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFC16246), Color(0xFFE59367)],
-                    begin: Alignment.bottomLeft,
-                    end: Alignment.topRight,
+          // Floating Action Button
+          Positioned(
+            top: -24,
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFD67A58), // Solid peachy orange
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFD67A58).withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0x4DC16246),
-                      blurRadius: 12,
-                      offset: Offset(0, 6),
-                    )
-                  ],
-                ),
-                child: const Icon(CupertinoIcons.add, color: Colors.white, size: 28),
+                ],
               ),
+              child: const Icon(Icons.add, color: Colors.white, size: 32),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildNavItem(IconData icon, String label, int index) {
     final active = currentIndex == index;
+    // Match colors exactly to screenshot
+    final color = active ? const Color(0xFF1F2937) : const Color(0xFF9CA3AF);
+
     return GestureDetector(
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: active ? AppColors.dark : AppColors.darkGray, size: 24),
-          const SizedBox(height: 4),
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(
               fontSize: 10,
-              fontWeight: active ? FontWeight.bold : FontWeight.w500,
-              color: active ? AppColors.dark : AppColors.darkGray,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+              color: color,
             ),
           ),
         ],
