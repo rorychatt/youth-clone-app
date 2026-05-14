@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../providers/user_provider.dart';
-
+import 'full_data_screen.dart';
 import '../widgets/circular_gauge.dart';
 
 class DataScreen extends StatefulWidget {
@@ -124,14 +124,19 @@ class _DataScreenState extends State<DataScreen> {
                     ),
                     const SizedBox(height: 16),
                     if (chatResponse.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: Text(
-                          chatResponse,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 14,
-                            height: 1.5,
+                      Container(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(ctx).size.height * 0.5,
+                        ),
+                        margin: const EdgeInsets.only(bottom: 16.0),
+                        child: SingleChildScrollView(
+                          child: Text(
+                            chatResponse,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 14,
+                              height: 1.5,
+                            ),
                           ),
                         ),
                       ),
@@ -417,22 +422,30 @@ class _DataScreenState extends State<DataScreen> {
                         ),
                       ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'SEE FULL DATA',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          letterSpacing: 1.0,
-                          fontWeight: FontWeight.bold,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const FullDataScreen()),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'SEE FULL DATA',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            letterSpacing: 1.0,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),

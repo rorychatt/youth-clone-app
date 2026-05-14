@@ -131,6 +131,17 @@ class ApiService {
     }
   }
 
+  static Future<List<dynamic>> getHealthHistory(String userId) async {
+    final response = await http.get(Uri.parse('$baseUrl/sync/junction/$userId/history'));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['history'] ?? [];
+    } else {
+      throw Exception('Failed to fetch health history');
+    }
+  }
+
   static Future<String> askClaude(String prompt) async {
     final response = await http.post(
       Uri.parse('$baseUrl/insights/claude/ask'),
