@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'data_screen.dart';
 import 'home_screen.dart';
 import 'services_screen.dart';
 
@@ -15,7 +16,7 @@ class _MainWrapperState extends State<MainWrapper> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const Center(child: Text("Data Screen")),
+    const DataScreen(),
     const ServicesScreen(),
     const Center(child: Text("Plan Screen")),
   ];
