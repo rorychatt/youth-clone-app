@@ -27,7 +27,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
 
     switch (_selectedRange) {
       case TimeRange.today:
-        cutoff = DateTime(now.year, now.month, now.day);
+        cutoff = null; // Today shows the latest data, no date filter needed
         break;
       case TimeRange.week:
         cutoff = DateTime(
@@ -51,16 +51,9 @@ class _FullDataScreenState extends State<FullDataScreen> {
     if (cutoff == null) return _history;
 
     return _history.where((point) {
-      final recStr = point['recorded_at'] as String?;
       final dateStr = point['date'] as String?;
       DateTime? pointDate;
-      if (recStr != null && recStr.isNotEmpty) {
-        final cleanedRecStr = recStr
-            .replaceAll(' UTC', 'Z')
-            .replaceAll(' ', 'T');
-        pointDate = DateTime.tryParse(cleanedRecStr)?.toLocal();
-      }
-      if (pointDate == null && dateStr != null && dateStr.isNotEmpty) {
+      if (dateStr != null && dateStr.isNotEmpty) {
         pointDate = DateTime.tryParse(dateStr);
       }
 
