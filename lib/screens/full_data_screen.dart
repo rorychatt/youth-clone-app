@@ -38,9 +38,33 @@ class _FullDataScreenState extends State<FullDataScreen> {
       if (mounted) {
         setState(() {
           if (history.isNotEmpty) {
-            final latestSync = history.last;
-            final sleepArray = latestSync['sleep'] as List<dynamic>?;
-            _history = sleepArray ?? [];
+            List<Map<String, dynamic>> allPoints = [];
+            for (var syncEvent in history) {
+              final recordedAt = syncEvent['recorded_at'] as String?;
+              final sleepArray = syncEvent['sleep'] as List<dynamic>?;
+              if (sleepArray != null) {
+                for (var sleepDay in sleepArray) {
+                  if (sleepDay is Map) {
+                    final point = Map<String, dynamic>.from(sleepDay);
+                    point['recorded_at'] = recordedAt;
+                    allPoints.add(point);
+                  }
+                }
+              }
+            }
+            
+            allPoints.sort((a, b) {
+              final dateA = a['date'] as String? ?? '';
+              final dateB = b['date'] as String? ?? '';
+              final cmp = dateA.compareTo(dateB);
+              if (cmp != 0) return cmp;
+              
+              final recA = a['recorded_at'] as String? ?? '';
+              final recB = b['recorded_at'] as String? ?? '';
+              return recA.compareTo(recB);
+            });
+            
+            _history = allPoints;
           } else {
             _history = [];
           }
@@ -432,18 +456,25 @@ class _FullDataScreenState extends State<FullDataScreen> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
+                      reservedSize: 40,
+                      interval: (_history.length / 5).ceilToDouble().clamp(1.0, double.infinity),
                       getTitlesWidget: (value, meta) {
                         int index = value.toInt();
                         if (index < 0 || index >= _history.length) return const SizedBox.shrink();
                         
-                        String text = '${index + 1}';
+                        String text = '';
                         final dateStr = _history[index]['date'] as String?;
+                        final recStr = _history[index]['recorded_at'] as String?;
                         if (dateStr != null && dateStr.length >= 10) {
                           try {
-                            final parsed = DateTime.parse(dateStr);
-                            text = '${parsed.month}/${parsed.day}';
+                            final parsedDate = DateTime.parse(dateStr);
+                            text = '${parsedDate.month}/${parsedDate.day}';
+                            if (recStr != null && recStr.isNotEmpty) {
+                               try {
+                                 final parsedRec = DateTime.parse(recStr).toLocal();
+                                 text += '\n${parsedRec.hour.toString().padLeft(2, '0')}:${parsedRec.minute.toString().padLeft(2, '0')}';
+                               } catch (_) {}
+                            }
                           } catch (_) {
                             text = dateStr.substring(5, 10);
                           }
@@ -453,6 +484,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
                           meta: meta,
                           child: Text(
                             text,
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 10,
