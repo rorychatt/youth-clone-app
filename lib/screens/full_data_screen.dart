@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../providers/user_provider.dart';
 
+enum TimeRange { today, week, month, all }
+
 class FullDataScreen extends StatefulWidget {
   const FullDataScreen({super.key});
 
@@ -15,6 +17,47 @@ class _FullDataScreenState extends State<FullDataScreen> {
   bool _isLoading = true;
   String _error = '';
   List<dynamic> _history = [];
+  TimeRange _selectedRange = TimeRange.all;
+
+  List<dynamic> get _filteredHistory {
+    if (_history.isEmpty) return [];
+
+    DateTime now = DateTime.now();
+    DateTime? cutoff;
+
+    switch (_selectedRange) {
+      case TimeRange.today:
+        cutoff = DateTime(now.year, now.month, now.day);
+        break;
+      case TimeRange.week:
+        cutoff = now.subtract(const Duration(days: 7));
+        break;
+      case TimeRange.month:
+        cutoff = now.subtract(const Duration(days: 30));
+        break;
+      case TimeRange.all:
+        cutoff = null;
+        break;
+    }
+
+    if (cutoff == null) return _history;
+
+    return _history.where((point) {
+      final recStr = point['recorded_at'] as String?;
+      final dateStr = point['date'] as String?;
+      DateTime? pointDate;
+      if (recStr != null && recStr.isNotEmpty) {
+        final cleanedRecStr = recStr.replaceAll(' UTC', 'Z').replaceAll(' ', 'T');
+        pointDate = DateTime.tryParse(cleanedRecStr)?.toLocal();
+      }
+      if (pointDate == null && dateStr != null && dateStr.isNotEmpty) {
+        pointDate = DateTime.tryParse(dateStr);
+      }
+
+      if (pointDate == null) return true;
+      return pointDate.isAfter(cutoff!) || pointDate.isAtSameMomentAs(cutoff);
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -52,18 +95,18 @@ class _FullDataScreenState extends State<FullDataScreen> {
                 }
               }
             }
-            
+
             allPoints.sort((a, b) {
               final dateA = a['date'] as String? ?? '';
               final dateB = b['date'] as String? ?? '';
               final cmp = dateA.compareTo(dateB);
               if (cmp != 0) return cmp;
-              
+
               final recA = a['recorded_at'] as String? ?? '';
               final recB = b['recorded_at'] as String? ?? '';
               return recA.compareTo(recB);
             });
-            
+
             _history = allPoints;
           } else {
             _history = [];
@@ -174,7 +217,8 @@ class _FullDataScreenState extends State<FullDataScreen> {
 
                                   Map<String, dynamic>? latestSleep;
                                   if (_history.isNotEmpty) {
-                                    latestSleep = _history.last as Map<String, dynamic>?;
+                                    latestSleep =
+                                        _history.last as Map<String, dynamic>?;
                                   }
 
                                   final score =
@@ -241,6 +285,45 @@ class _FullDataScreenState extends State<FullDataScreen> {
     );
   }
 
+  Widget _buildFilterChip(String label, TimeRange range) {
+    final isSelected = _selectedRange == range;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedRange = range;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.orange : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: isSelected
+              ? null
+              : Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              const Icon(Icons.check, size: 16, color: Colors.white),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.7),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final gradient = LinearGradient(
@@ -296,6 +379,25 @@ class _FullDataScreenState extends State<FullDataScreen> {
                   ],
                 ),
               ),
+              // Filter Buttons
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Row(
+                  children: [
+                    _buildFilterChip('Today', TimeRange.today),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('7 Days', TimeRange.week),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('30 Days', TimeRange.month),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('All Time', TimeRange.all),
+                  ],
+                ),
+              ),
               Expanded(
                 child: _isLoading
                     ? const Center(
@@ -308,7 +410,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
                           style: const TextStyle(color: Colors.white),
                         ),
                       )
-                    : _history.isEmpty
+                    : _filteredHistory.isEmpty
                     ? const Center(
                         child: Text(
                           'No historical data found',
@@ -330,9 +432,11 @@ class _FullDataScreenState extends State<FullDataScreen> {
       children: [
         _buildChartCard(
           title: 'Wellness Score',
-          spots: _getSpots((data) => (data['score'] as num?)?.toDouble() ?? 0.0),
+          spots: _getSpots(
+            (data) => (data['score'] as num?)?.toDouble() ?? 0.0,
+          ),
           minY: 0,
-          maxY: 100,
+          maxY: 110,
           idealMin: 80,
           idealMax: 100,
           lineColor: Colors.greenAccent,
@@ -340,9 +444,14 @@ class _FullDataScreenState extends State<FullDataScreen> {
         const SizedBox(height: 24),
         _buildChartCard(
           title: 'Resting Heart Rate (bpm)',
-          spots: _getSpots((data) => (data['hr_resting'] as num?)?.toDouble() ?? (data['hr_lowest'] as num?)?.toDouble() ?? 0.0),
+          spots: _getSpots(
+            (data) =>
+                (data['hr_resting'] as num?)?.toDouble() ??
+                (data['hr_lowest'] as num?)?.toDouble() ??
+                0.0,
+          ),
           minY: 30,
-          maxY: 100,
+          maxY: 110,
           idealMin: 40,
           idealMax: 60,
           lineColor: Colors.pinkAccent,
@@ -350,9 +459,11 @@ class _FullDataScreenState extends State<FullDataScreen> {
         const SizedBox(height: 24),
         _buildChartCard(
           title: 'HRV (ms)',
-          spots: _getSpots((data) => (data['average_hrv'] as num?)?.toDouble() ?? 0.0),
+          spots: _getSpots(
+            (data) => (data['average_hrv'] as num?)?.toDouble() ?? 0.0,
+          ),
           minY: 10,
-          maxY: 150,
+          maxY: 160,
           idealMin: 40,
           idealMax: 150,
           lineColor: Colors.orangeAccent,
@@ -364,8 +475,9 @@ class _FullDataScreenState extends State<FullDataScreen> {
 
   List<FlSpot> _getSpots(double Function(Map<String, dynamic>) extractor) {
     List<FlSpot> spots = [];
-    for (int i = 0; i < _history.length; i++) {
-      final val = extractor(_history[i]);
+    final data = _filteredHistory;
+    for (int i = 0; i < data.length; i++) {
+      final val = extractor(data[i]);
       if (val > 0) {
         spots.add(FlSpot(i.toDouble(), val));
       }
@@ -425,11 +537,11 @@ class _FullDataScreenState extends State<FullDataScreen> {
           ),
           const SizedBox(height: 32),
           SizedBox(
-            height: 200,
+            height: 220,
             child: LineChart(
               LineChartData(
                 minX: 0,
-                maxX: (_history.length - 1).toDouble().clamp(
+                maxX: (_filteredHistory.length - 1).toDouble().clamp(
                   1.0,
                   double.infinity,
                 ),
@@ -456,30 +568,37 @@ class _FullDataScreenState extends State<FullDataScreen> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 40,
-                      interval: (_history.length / 5).ceilToDouble().clamp(1.0, double.infinity),
+                      reservedSize: 42,
+                      interval: (_filteredHistory.length / 5)
+                          .ceilToDouble()
+                          .clamp(1.0, double.infinity),
                       getTitlesWidget: (value, meta) {
+                        final data = _filteredHistory;
                         int index = value.toInt();
-                        if (index < 0 || index >= _history.length) return const SizedBox.shrink();
-                        
+                        if (index < 0 || index >= data.length)
+                          return const SizedBox.shrink();
+
                         String text = '';
-                        final dateStr = _history[index]['date'] as String?;
-                        final recStr = _history[index]['recorded_at'] as String?;
+                        final dateStr = data[index]['date'] as String?;
+                        final recStr = data[index]['recorded_at'] as String?;
                         if (dateStr != null && dateStr.length >= 10) {
                           try {
                             final parsedDate = DateTime.parse(dateStr);
                             text = '${parsedDate.month}/${parsedDate.day}';
                             if (recStr != null && recStr.isNotEmpty) {
-                               try {
-                                 final parsedRec = DateTime.parse(recStr).toLocal();
-                                 text += '\n${parsedRec.hour.toString().padLeft(2, '0')}:${parsedRec.minute.toString().padLeft(2, '0')}';
-                               } catch (_) {}
+                              try {
+                                final parsedRec = DateTime.parse(
+                                  recStr,
+                                ).toLocal();
+                                text +=
+                                    '\n${parsedRec.hour.toString().padLeft(2, '0')}:${parsedRec.minute.toString().padLeft(2, '0')}';
+                              } catch (_) {}
                             }
                           } catch (_) {
                             text = dateStr.substring(5, 10);
                           }
                         }
-                        
+
                         return SideTitleWidget(
                           meta: meta,
                           child: Text(
@@ -515,6 +634,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
+                    preventCurveOverShooting: true,
                     color: lineColor,
                     barWidth: 3,
                     isStrokeCapRound: true,
