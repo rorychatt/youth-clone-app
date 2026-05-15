@@ -47,7 +47,9 @@ class _FullDataScreenState extends State<FullDataScreen> {
       final dateStr = point['date'] as String?;
       DateTime? pointDate;
       if (recStr != null && recStr.isNotEmpty) {
-        final cleanedRecStr = recStr.replaceAll(' UTC', 'Z').replaceAll(' ', 'T');
+        final cleanedRecStr = recStr
+            .replaceAll(' UTC', 'Z')
+            .replaceAll(' ', 'T');
         pointDate = DateTime.tryParse(cleanedRecStr)?.toLocal();
       }
       if (pointDate == null && dateStr != null && dateStr.isNotEmpty) {
@@ -587,8 +589,11 @@ class _FullDataScreenState extends State<FullDataScreen> {
                             text = '${parsedDate.month}/${parsedDate.day}';
                             if (recStr != null && recStr.isNotEmpty) {
                               try {
+                                final cleanedRecStr = recStr
+                                    .replaceAll(' UTC', 'Z')
+                                    .replaceAll(' ', 'T');
                                 final parsedRec = DateTime.parse(
-                                  recStr,
+                                  cleanedRecStr,
                                 ).toLocal();
                                 text +=
                                     '\n${parsedRec.hour.toString().padLeft(2, '0')}:${parsedRec.minute.toString().padLeft(2, '0')}';
