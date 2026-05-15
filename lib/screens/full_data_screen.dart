@@ -30,10 +30,18 @@ class _FullDataScreenState extends State<FullDataScreen> {
         cutoff = DateTime(now.year, now.month, now.day);
         break;
       case TimeRange.week:
-        cutoff = now.subtract(const Duration(days: 7));
+        cutoff = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 7));
         break;
       case TimeRange.month:
-        cutoff = now.subtract(const Duration(days: 30));
+        cutoff = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 30));
         break;
       case TimeRange.all:
         cutoff = null;
@@ -56,7 +64,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
         pointDate = DateTime.tryParse(dateStr);
       }
 
-      if (pointDate == null) return true;
+      if (pointDate == null) return false;
       return pointDate.isAfter(cutoff!) || pointDate.isAtSameMomentAs(cutoff);
     }).toList();
   }
