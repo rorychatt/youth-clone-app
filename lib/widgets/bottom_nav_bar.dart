@@ -45,7 +45,7 @@ class BottomNavBar extends StatelessWidget {
                   _buildNavItem(Icons.bar_chart, 'Data', 1),
                   const SizedBox(width: 48), // Space for FAB
                   _buildNavItem(Icons.grid_view, 'Services', 2),
-                  _buildNavItem(Icons.check_box, 'Plan', 3),
+                  _buildNavItem(Icons.auto_awesome, 'Recs', 3),
                 ],
               ),
             ),

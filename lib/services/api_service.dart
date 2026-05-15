@@ -12,6 +12,14 @@ class ApiService {
     }
   }
 
+  static String get recommendationsBaseUrl {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:3000';
+    } else {
+      return 'http://127.0.0.1:3000';
+    }
+  }
+
   static Future<Map<String, dynamic>> login(
     String email,
     String password,
@@ -209,6 +217,34 @@ class ApiService {
       return data['response'] ?? '';
     } else {
       throw Exception('Failed to ask Claude');
+    }
+  }
+
+  static Future<void> triggerRecommendations(String userId, String context) async {
+    final response = await http.get(
+      Uri.parse('$recommendationsBaseUrl/recommendations?user_id=$userId&context=$context'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    if (response.statusCode != 202) {
+      throw Exception('Failed to trigger recommendations');
+    }
+  }
+
+  static Future<List<String>?> getRecommendations(String userId) async {
+    final response = await http.get(
+      Uri.parse('$recommendationsBaseUrl/recommendations/results?user_id=$userId'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final items = data['data']['items'] as List<dynamic>;
+      return items.map((e) => e.toString()).toList();
+    } else if (response.statusCode == 404) {
+      return null; // Pending
+    } else {
+      throw Exception('Failed to fetch recommendations');
     }
   }
 }

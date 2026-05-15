@@ -3,6 +3,7 @@ import '../widgets/bottom_nav_bar.dart';
 import 'data_screen.dart';
 import 'home_screen.dart';
 import 'services_screen.dart';
+import 'recommendations_screen.dart';
 
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
@@ -18,7 +19,7 @@ class _MainWrapperState extends State<MainWrapper> {
     const HomeScreen(),
     const DataScreen(),
     const ServicesScreen(),
-    const Center(child: Text("Plan Screen")),
+    const RecommendationsScreen(),
   ];
 
   @override
