@@ -41,7 +41,7 @@ class _DataScreenState extends State<DataScreen> {
       // metrics might be {"sleep": [{...}]}
       if (metrics['sleep'] != null && (metrics['sleep'] as List).isNotEmpty) {
         setState(() {
-          _sleepData = (metrics['sleep'] as List).first;
+          _sleepData = (metrics['sleep'] as List).last;
           _isLoading = false;
         });
         _fetchSuggestion();

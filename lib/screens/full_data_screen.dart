@@ -37,10 +37,13 @@ class _FullDataScreenState extends State<FullDataScreen> {
       final history = await ApiService.getHealthHistory(userProvider.userId!);
       if (mounted) {
         setState(() {
-          _history = history.reversed
-              .toList(); // Assuming API returns desc, we reverse for asc (oldest to newest)
-          // Wait, the backend query uses ORDER BY recorded_at ASC, so oldest to newest. No need to reverse.
-          _history = history;
+          if (history.isNotEmpty) {
+            final latestSync = history.last;
+            final sleepArray = latestSync['sleep'] as List<dynamic>?;
+            _history = sleepArray ?? [];
+          } else {
+            _history = [];
+          }
           _isLoading = false;
         });
       }
@@ -147,12 +150,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
 
                                   Map<String, dynamic>? latestSleep;
                                   if (_history.isNotEmpty) {
-                                    final sleepList =
-                                        _history.last['sleep'] as List?;
-                                    if (sleepList != null &&
-                                        sleepList.isNotEmpty) {
-                                      latestSleep = sleepList.first;
-                                    }
+                                    latestSleep = _history.last as Map<String, dynamic>?;
                                   }
 
                                   final score =
@@ -308,11 +306,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
       children: [
         _buildChartCard(
           title: 'Wellness Score',
-          spots: _getSpots((data) {
-            final sleepList = data['sleep'] as List?;
-            if (sleepList == null || sleepList.isEmpty) return 0.0;
-            return (sleepList.first['score'] as num?)?.toDouble() ?? 0.0;
-          }),
+          spots: _getSpots((data) => (data['score'] as num?)?.toDouble() ?? 0.0),
           minY: 0,
           maxY: 100,
           idealMin: 80,
@@ -322,13 +316,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
         const SizedBox(height: 24),
         _buildChartCard(
           title: 'Resting Heart Rate (bpm)',
-          spots: _getSpots((data) {
-            final sleepList = data['sleep'] as List?;
-            if (sleepList == null || sleepList.isEmpty) return 0.0;
-            return (sleepList.first['hr_resting'] as num?)?.toDouble() ??
-                (sleepList.first['hr_lowest'] as num?)?.toDouble() ??
-                0.0;
-          }),
+          spots: _getSpots((data) => (data['hr_resting'] as num?)?.toDouble() ?? (data['hr_lowest'] as num?)?.toDouble() ?? 0.0),
           minY: 30,
           maxY: 100,
           idealMin: 40,
@@ -338,11 +326,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
         const SizedBox(height: 24),
         _buildChartCard(
           title: 'HRV (ms)',
-          spots: _getSpots((data) {
-            final sleepList = data['sleep'] as List?;
-            if (sleepList == null || sleepList.isEmpty) return 0.0;
-            return (sleepList.first['average_hrv'] as num?)?.toDouble() ?? 0.0;
-          }),
+          spots: _getSpots((data) => (data['average_hrv'] as num?)?.toDouble() ?? 0.0),
           minY: 10,
           maxY: 150,
           idealMin: 40,
@@ -445,8 +429,38 @@ class _FullDataScreenState extends State<FullDataScreen> {
                   topTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
                   ),
-                  bottomTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        int index = value.toInt();
+                        if (index < 0 || index >= _history.length) return const SizedBox.shrink();
+                        
+                        String text = '${index + 1}';
+                        final dateStr = _history[index]['date'] as String?;
+                        if (dateStr != null && dateStr.length >= 10) {
+                          try {
+                            final parsed = DateTime.parse(dateStr);
+                            text = '${parsed.month}/${parsed.day}';
+                          } catch (_) {
+                            text = dateStr.substring(5, 10);
+                          }
+                        }
+                        
+                        return SideTitleWidget(
+                          meta: meta,
+                          child: Text(
+                            text,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 10,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
