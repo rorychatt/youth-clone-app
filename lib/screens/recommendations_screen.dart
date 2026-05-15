@@ -239,7 +239,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> with Sing
                     const SizedBox(height: 8),
                     Text(
                       rec,
-                      style: AppTheme.bodyLarge.copyWith(
+                      style: AppTheme.bodyMedium.copyWith(
                         color: AppColors.dark,
                         height: 1.5,
                       ),
