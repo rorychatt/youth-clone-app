@@ -70,11 +70,12 @@ class _FullDataScreenState extends State<FullDataScreen> {
   Future<void> _fetchHistory() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (userProvider.userId == null) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = 'Not logged in';
           _isLoading = false;
         });
+      }
       return;
     }
 
@@ -98,7 +99,20 @@ class _FullDataScreenState extends State<FullDataScreen> {
               }
             }
 
-            allPoints.sort((a, b) {
+            Map<String, Map<String, dynamic>> grouped = {};
+            for (var point in allPoints) {
+              final date = point['date'] as String? ?? '';
+              final provider =
+                  (point['source'] as Map?)?['name'] as String? ?? 'Unknown';
+              final key = '${date}_$provider';
+              if (date.isNotEmpty) {
+                grouped[key] = point;
+              }
+            }
+
+            List<Map<String, dynamic>> finalPoints = grouped.values.toList();
+
+            finalPoints.sort((a, b) {
               final dateA = a['date'] as String? ?? '';
               final dateB = b['date'] as String? ?? '';
               final cmp = dateA.compareTo(dateB);
@@ -109,7 +123,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
               return recA.compareTo(recB);
             });
 
-            _history = allPoints;
+            _history = finalPoints;
           } else {
             _history = [];
           }
@@ -210,8 +224,9 @@ class _FullDataScreenState extends State<FullDataScreen> {
                           onPressed: isAsking
                               ? null
                               : () async {
-                                  if (textController.text.trim().isEmpty)
+                                  if (textController.text.trim().isEmpty) {
                                     return;
+                                  }
                                   setSheetState(() {
                                     isAsking = true;
                                     chatResponse = '';
@@ -419,6 +434,8 @@ class _FullDataScreenState extends State<FullDataScreen> {
                           style: TextStyle(color: Colors.white),
                         ),
                       )
+                    : _selectedRange == TimeRange.today
+                    ? _buildTodaySummary()
                     : _buildCharts(),
               ),
             ],
@@ -428,25 +445,172 @@ class _FullDataScreenState extends State<FullDataScreen> {
     );
   }
 
+  Widget _buildTodaySummary() {
+    if (_filteredHistory.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final todayData = _filteredHistory.last;
+    final score = (todayData['score'] as num?)?.toDouble() ?? 0.0;
+    final restingHr =
+        (todayData['hr_resting'] as num?)?.toInt() ??
+        (todayData['hr_lowest'] as num?)?.toInt() ??
+        0;
+    final hrv = (todayData['average_hrv'] as num?)?.toInt() ?? 0;
+    final totalSleepSecs =
+        (todayData['total'] as num?)?.toInt() ??
+        (todayData['duration'] as num?)?.toInt() ??
+        0;
+    final hours = totalSleepSecs ~/ 3600;
+    final minutes = (totalSleepSecs % 3600) ~/ 60;
+    final sleepStr = totalSleepSecs > 0 ? '${hours}h ${minutes}m' : 'N/A';
+
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        _buildSummaryCard(
+          title: 'WELLNESS SCORE',
+          value: score.toInt().toString(),
+          unit: '/ 100',
+          icon: Icons.health_and_safety,
+          color: Colors.greenAccent,
+        ),
+        const SizedBox(height: 16),
+        _buildSummaryCard(
+          title: 'RESTING HR',
+          value: restingHr.toString(),
+          unit: 'bpm',
+          icon: Icons.favorite,
+          color: Colors.pinkAccent,
+        ),
+        const SizedBox(height: 16),
+        _buildSummaryCard(
+          title: 'SLEEP DURATION',
+          value: sleepStr
+              .replaceAll('h ', 'h\n')
+              .replaceAll('m', 'm'), // formatting for space
+          unit: '',
+          icon: Icons.bedtime,
+          color: Colors.deepPurpleAccent,
+        ),
+        const SizedBox(height: 16),
+        _buildSummaryCard(
+          title: 'HRV',
+          value: hrv.toString(),
+          unit: 'ms',
+          icon: Icons.monitor_heart,
+          color: Colors.orangeAccent,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard({
+    required String title,
+    required String value,
+    required String unit,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 32),
+          ),
+          const SizedBox(width: 24),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    value.contains('\n') ? value.split('\n')[0] : value,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    value.contains('\n') ? value.split('\n')[1] : unit,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: value.contains('\n') ? 32 : 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCharts() {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
+        _buildLegend(),
+        const SizedBox(height: 24),
         _buildChartCard(
           title: 'Wellness Score',
-          spots: _getSpots(
+          spotsByProvider: _getSpotsByProvider(
             (data) => (data['score'] as num?)?.toDouble() ?? 0.0,
           ),
           minY: 0,
           maxY: 110,
           idealMin: 80,
           idealMax: 100,
-          lineColor: Colors.greenAccent,
+        ),
+        const SizedBox(height: 24),
+        _buildChartCard(
+          title: 'Sleep Duration (hrs)',
+          spotsByProvider: _getSpotsByProvider((data) {
+            final d =
+                (data['total'] as num?)?.toDouble() ??
+                (data['duration'] as num?)?.toDouble() ??
+                0.0;
+            return d / 3600.0;
+          }),
+          minY: 0,
+          maxY: 12,
+          idealMin: 7,
+          idealMax: 9,
         ),
         const SizedBox(height: 24),
         _buildChartCard(
           title: 'Resting Heart Rate (bpm)',
-          spots: _getSpots(
+          spotsByProvider: _getSpotsByProvider(
             (data) =>
                 (data['hr_resting'] as num?)?.toDouble() ??
                 (data['hr_lowest'] as num?)?.toDouble() ??
@@ -456,45 +620,112 @@ class _FullDataScreenState extends State<FullDataScreen> {
           maxY: 110,
           idealMin: 40,
           idealMax: 60,
-          lineColor: Colors.pinkAccent,
         ),
         const SizedBox(height: 24),
         _buildChartCard(
           title: 'HRV (ms)',
-          spots: _getSpots(
+          spotsByProvider: _getSpotsByProvider(
             (data) => (data['average_hrv'] as num?)?.toDouble() ?? 0.0,
           ),
           minY: 10,
           maxY: 160,
           idealMin: 40,
           idealMax: 150,
-          lineColor: Colors.orangeAccent,
         ),
         const SizedBox(height: 48),
       ],
     );
   }
 
-  List<FlSpot> _getSpots(double Function(Map<String, dynamic>) extractor) {
-    List<FlSpot> spots = [];
-    final data = _filteredHistory;
-    for (int i = 0; i < data.length; i++) {
-      final val = extractor(data[i]);
-      if (val > 0) {
-        spots.add(FlSpot(i.toDouble(), val));
+  Widget _buildLegend() {
+    final providers = _filteredHistory
+        .map((e) => (e['source'] as Map?)?['name'] as String? ?? 'Unknown')
+        .toSet()
+        .toList();
+    if (providers.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: providers.map((p) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: _getColorForProvider(p),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              p,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  List<String> get _chartDates {
+    final dates = _filteredHistory
+        .map((e) => e['date'] as String? ?? '')
+        .toSet()
+        .toList();
+    dates.sort();
+    return dates;
+  }
+
+  Color _getColorForProvider(String provider) {
+    final p = provider.toLowerCase();
+    if (p.contains('oura')) return Colors.greenAccent;
+    if (p.contains('whoop')) return Colors.cyanAccent;
+    if (p.contains('apple')) return Colors.orangeAccent;
+    if (p.contains('garmin')) return Colors.pinkAccent;
+    return Colors.deepPurpleAccent;
+  }
+
+  Map<String, List<FlSpot>> _getSpotsByProvider(
+    double Function(Map<String, dynamic>) extractor,
+  ) {
+    Map<String, List<FlSpot>> spotsByProvider = {};
+    final dates = _chartDates;
+
+    for (int i = 0; i < dates.length; i++) {
+      final date = dates[i];
+      final pointsForDate = _filteredHistory.where(
+        (e) => (e['date'] as String? ?? '') == date,
+      );
+
+      for (var point in pointsForDate) {
+        final provider =
+            (point['source'] as Map?)?['name'] as String? ?? 'Unknown';
+        final val = extractor(point);
+        if (val > 0) {
+          if (!spotsByProvider.containsKey(provider)) {
+            spotsByProvider[provider] = [];
+          }
+          spotsByProvider[provider]!.add(FlSpot(i.toDouble(), val));
+        }
       }
     }
-    return spots;
+    return spotsByProvider;
   }
 
   Widget _buildChartCard({
     required String title,
-    required List<FlSpot> spots,
+    required Map<String, List<FlSpot>> spotsByProvider,
     required double minY,
     required double maxY,
     required double idealMin,
     required double idealMax,
-    required Color lineColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -543,7 +774,7 @@ class _FullDataScreenState extends State<FullDataScreen> {
             child: LineChart(
               LineChartData(
                 minX: 0,
-                maxX: (_filteredHistory.length - 1).toDouble().clamp(
+                maxX: (_chartDates.length - 1).toDouble().clamp(
                   1.0,
                   double.infinity,
                 ),
@@ -571,34 +802,23 @@ class _FullDataScreenState extends State<FullDataScreen> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 42,
-                      interval: (_filteredHistory.length / 5)
-                          .ceilToDouble()
-                          .clamp(1.0, double.infinity),
+                      interval: (_chartDates.length / 5).ceilToDouble().clamp(
+                        1.0,
+                        double.infinity,
+                      ),
                       getTitlesWidget: (value, meta) {
-                        final data = _filteredHistory;
+                        final dates = _chartDates;
                         int index = value.toInt();
-                        if (index < 0 || index >= data.length)
+                        if (index < 0 || index >= dates.length) {
                           return const SizedBox.shrink();
+                        }
 
                         String text = '';
-                        final dateStr = data[index]['date'] as String?;
-                        final recStr = data[index]['recorded_at'] as String?;
-                        if (dateStr != null && dateStr.length >= 10) {
+                        final dateStr = dates[index];
+                        if (dateStr.length >= 10) {
                           try {
                             final parsedDate = DateTime.parse(dateStr);
                             text = '${parsedDate.month}/${parsedDate.day}';
-                            if (recStr != null && recStr.isNotEmpty) {
-                              try {
-                                final cleanedRecStr = recStr
-                                    .replaceAll(' UTC', 'Z')
-                                    .replaceAll(' ', 'T');
-                                final parsedRec = DateTime.parse(
-                                  cleanedRecStr,
-                                ).toLocal();
-                                text +=
-                                    '\n${parsedRec.hour.toString().padLeft(2, '0')}:${parsedRec.minute.toString().padLeft(2, '0')}';
-                              } catch (_) {}
-                            }
                           } catch (_) {
                             text = dateStr.substring(5, 10);
                           }
@@ -635,21 +855,25 @@ class _FullDataScreenState extends State<FullDataScreen> {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  LineChartBarData(
+                lineBarsData: spotsByProvider.entries.map((entry) {
+                  final provider = entry.key;
+                  final spots = entry.value;
+                  final color = _getColorForProvider(provider);
+
+                  return LineChartBarData(
                     spots: spots,
                     isCurved: true,
                     preventCurveOverShooting: true,
-                    color: lineColor,
+                    color: color,
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: FlDotData(show: spots.length == 1),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: lineColor.withValues(alpha: 0.1),
+                      color: color.withValues(alpha: 0.1),
                     ),
-                  ),
-                ],
+                  );
+                }).toList(),
                 extraLinesData: ExtraLinesData(
                   horizontalLines: [
                     HorizontalLine(

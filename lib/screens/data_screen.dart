@@ -172,8 +172,9 @@ class _DataScreenState extends State<DataScreen> {
                           onPressed: isAsking
                               ? null
                               : () async {
-                                  if (textController.text.trim().isEmpty)
+                                  if (textController.text.trim().isEmpty) {
                                     return;
+                                  }
 
                                   setSheetState(() {
                                     isAsking = true;
